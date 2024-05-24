@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import numpy as np
+import open3d as o3d
 import MinkowskiEngine as ME
 import torchvision.transforms as T
 import collections.abc as container_abcs
@@ -126,19 +127,23 @@ class RealWorldDataset(Dataset):
         return tcp_list
 
     def load_point_cloud(self, colors, depths, cam_id):
-        xmap = np.arange(depths.shape[1])
-        ymap = np.arange(depths.shape[0])
-        xmap, ymap = np.meshgrid(xmap, ymap)
+        h, w = depths.shape
         fx, fy = INTRINSICS[cam_id][0, 0], INTRINSICS[cam_id][1, 1]
         cx, cy = INTRINSICS[cam_id][0, 2], INTRINSICS[cam_id][1, 2]
-        points_z = depths.astype(np.float32) / (1000. if 'f' not in cam_id else 4000.)
-        points_x = (xmap - cx) * points_z / fx
-        points_y = (ymap - cy) * points_z / fy
-        points = np.stack([points_x, points_y, points_z], axis = -1).astype(np.float32)
-        depth_mask = (depths > 0.01)
-        points = points[depth_mask]
-        colors = colors[depth_mask]
-        return points, colors
+        scale = 1000. if 'f' not in cam_id else 4000.
+        colors = o3d.geometry.Image(colors.astype(np.uint8))
+        depths = o3d.geometry.Image(depths.astype(np.float32))
+        camera_intrinsics = o3d.camera.PinholeCameraIntrinsic(
+            width = w, height = h, fx = fx, fy = fy, cx = cx, cy = cy
+        )
+        rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+            colors, depths, scale, convert_rgb_to_intensity = False
+        )
+        cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, camera_intrinsics)
+        cloud = cloud.voxel_down_sample(self.voxel_size)
+        points = np.array(cloud.points)
+        colors = np.array(cloud.colors)
+        return points.astype(np.float32), colors.astype(np.float32)
 
     def __getitem__(self, index):
         data_path = self.data_paths[index]
@@ -162,23 +167,8 @@ class RealWorldDataset(Dataset):
             self.projectors[timestamp] = Projector(os.path.join(self.calib_path, timestamp))
         projector = self.projectors[timestamp]
 
-        # load colors and depths
-        colors_list = []
-        depths_list = []
-        for frame_id in obs_frame_ids:
-            colors_list.append(
-                np.array(Image.open(os.path.join(color_dir, "{}.png".format(frame_id))), dtype = np.float32) / 255.0
-            )
-            depths_list.append(
-                np.array(Image.open(os.path.join(depth_dir, "{}.png".format(frame_id))), dtype = np.float32)
-            )
-        colors_list = np.stack(colors_list, axis = 0)
-        depths_list = np.stack(depths_list, axis = 0)
-
-        # apply color jitter and imagenet normalization
+        # create color jitter
         if self.split == 'train' and self.aug_jitter:
-            hor, h, w, c = colors_list.shape
-            colors_list = torch.from_numpy(colors_list.reshape(hor * h, w, c).transpose([2, 0, 1]))
             jitter = T.ColorJitter(
                 brightness = self.aug_jitter_params[0],
                 contrast = self.aug_jitter_params[1],
@@ -186,9 +176,20 @@ class RealWorldDataset(Dataset):
                 hue = self.aug_jitter_params[3]
             )
             jitter = T.RandomApply([jitter], p = self.aug_jitter_prob)
-            colors_list = jitter(colors_list)
-            colors_list = colors_list.numpy().transpose([1, 2, 0]).reshape(hor, h, w, c)
-        colors_list = (colors_list - IMG_MEAN) / IMG_STD
+
+        # load colors and depths
+        colors_list = []
+        depths_list = []
+        for frame_id in obs_frame_ids:
+            colors = Image.open(os.path.join(color_dir, "{}.png".format(frame_id)))
+            if self.split == 'train' and self.aug_jitter:
+                colors = jitter(colors)
+            colors_list.append(colors)
+            depths_list.append(
+                np.array(Image.open(os.path.join(depth_dir, "{}.png".format(frame_id))), dtype = np.float32)
+            )
+        colors_list = np.stack(colors_list, axis = 0)
+        depths_list = np.stack(depths_list, axis = 0)
 
         # point clouds
         clouds = []
@@ -200,6 +201,8 @@ class RealWorldDataset(Dataset):
             mask = (x_mask & y_mask & z_mask)
             points = points[mask]
             colors = colors[mask]
+            # apply imagenet normalization
+            colors = (colors - IMG_MEAN) / IMG_STD
             cloud = np.concatenate([points, colors], axis = -1)
             clouds.append(cloud)
 
@@ -233,9 +236,8 @@ class RealWorldDataset(Dataset):
             # Upd Note. Make coords contiguous.
             coords = np.ascontiguousarray(cloud[:, :3] / self.voxel_size, dtype = np.int32)
             # Upd Note. API change.
-            _, idxs = ME.utils.sparse_quantize(coords, return_index = True)
-            input_coords_list.append(coords[idxs])
-            input_feats_list.append(cloud[idxs].astype(np.float32))
+            input_coords_list.append(coords)
+            input_feats_list.append(cloud.astype(np.float32))
 
         # convert to torch
         actions = torch.from_numpy(actions).float()

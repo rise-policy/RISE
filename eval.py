@@ -4,6 +4,7 @@ import json
 import torch
 import argparse
 import numpy as np
+import open3d as o3d
 import torch.nn as nn
 import MinkowskiEngine as ME
 import matplotlib.pyplot as plt
@@ -43,48 +44,39 @@ default_args = edict({
 })
 
 
-def create_point_cloud(colors, depths, cam_intrinsics):
+def create_point_cloud(colors, depths, cam_intrinsics, voxel_size = 0.005):
     """
     color, depth => point cloud
     """
-    colors = np.array(colors).astype(np.float32) / 255.0
-    depths = np.array(depths).astype(np.float32)
-    # imagenet normalization
-    colors = (colors - IMG_MEAN) / IMG_STD
-    # create point cloud
-    xmap = np.arange(depths.shape[1])
-    ymap = np.arange(depths.shape[0])
-    xmap, ymap = np.meshgrid(xmap, ymap)
+    h, w = depths.shape
     fx, fy = cam_intrinsics[0, 0], cam_intrinsics[1, 1]
     cx, cy = cam_intrinsics[0, 2], cam_intrinsics[1, 2]
-    points_z = depths
-    points_x = (xmap - cx) * points_z / fx
-    points_y = (ymap - cy) * points_z / fy
-    points = np.stack([points_x, points_y, points_z], axis = -1)
-    # filter invalid depths
-    depth_mask = (depths > 0.01)
-    points = points[depth_mask]
-    colors = colors[depth_mask]
-    # filter ouside workspace
+
+    colors = o3d.geometry.Image(colors.astype(np.uint8))
+    depths = o3d.geometry.Image(depths.astype(np.float32))
+
+    camera_intrinsics = o3d.camera.PinholeCameraIntrinsic(
+        width = w, height = h, fx = fx, fy = fy, cx = cx, cy = cy
+    )
+    rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+        colors, depths, depth_scale = 1.0, convert_rgb_to_intensity = False
+    )
+    cloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, camera_intrinsics)
+    cloud = cloud.voxel_down_sample(voxel_size)
+    points = np.array(cloud.points).astype(np.float32)
+    colors = np.array(cloud.colors).astype(np.float32)
+
     x_mask = ((points[:, 0] >= WORKSPACE_MIN[0]) & (points[:, 0] <= WORKSPACE_MAX[0]))
     y_mask = ((points[:, 1] >= WORKSPACE_MIN[1]) & (points[:, 1] <= WORKSPACE_MAX[1]))
     z_mask = ((points[:, 2] >= WORKSPACE_MIN[2]) & (points[:, 2] <= WORKSPACE_MAX[2]))
     mask = (x_mask & y_mask & z_mask)
     points = points[mask]
     colors = colors[mask]
+    # imagenet normalization
+    colors = (colors - IMG_MEAN) / IMG_STD
     # final cloud
-    cloud = np.concatenate([points, colors], axis = -1)
-    return cloud
-
-def create_voxel_input(cloud, voxel_size = 0.005):
-    """
-    point cloud => coords, feats
-    """
-    # Upd Note. Make coords contiguous.
-    coords = np.ascontiguousarray(cloud[:, :3] / voxel_size, dtype = np.int32)
-    # Upd Note. API change.
-    _, idxs = ME.utils.sparse_quantize(coords, return_index = True)
-    return coords[idxs], cloud[idxs].astype(np.float32)
+    cloud_final = np.concatenate([points, colors], axis = -1).astype(np.float32)
+    return cloud_final
 
 def create_batch(coords, feats):
     """
@@ -99,9 +91,9 @@ def create_input(colors, depths, cam_intrinsics, voxel_size = 0.005):
     """
     colors, depths => batch coords, batch feats
     """
-    cloud = create_point_cloud(colors, depths, cam_intrinsics)
-    coords, feats = create_voxel_input(cloud, voxel_size = voxel_size)
-    coords_batch, feats_batch = create_batch(coords, feats)
+    cloud = create_point_cloud(colors, depths, cam_intrinsics, voxel_size = voxel_size)
+    coords = np.ascontiguousarray(cloud[:, :3] / voxel_size, dtype = np.int32)
+    coords_batch, feats_batch = create_batch(coords, cloud)
     return coords_batch, feats_batch, cloud
 
 def unnormalize_action(action):
