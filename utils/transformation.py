@@ -230,7 +230,7 @@ def rot_trans_mat(offsets, angles):
     res[:3, 3] = np.array(offsets)
     return res
 
-def trans_rot_mat(offsets, angle):
+def trans_rot_mat(offsets, angles):
     """
     4x4 transformation matrix for translation along x, y, z axes, then rotation along x, y, z axes.
     """
