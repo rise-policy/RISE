@@ -172,7 +172,7 @@ def evaluate(args_override):
         policy.eval()
         prev_width = None
         for t in range(args.max_steps):
-            if t % args.num_action == 0:
+            if t % args.num_inference_step == 0:
                 # pre-process inputs
                 colors, depths = agent.get_observation()
                 coords, feats, cloud = create_input(
