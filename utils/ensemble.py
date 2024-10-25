@@ -12,7 +12,7 @@ class EnsembleBuffer:
     Temporal ensemble buffer.
     """
     def __init__(self, mode = "new", **kwargs):
-        assert mode in ["new", "old", "avg", "act", "hato"]
+        assert mode in ["new", "old", "avg", "act", "hato"], "Ensemble mode {} not supported.".format(mode)
         self.mode = mode
         self.timestep = 0
         self.actions_start_timestep = 0
@@ -51,6 +51,7 @@ class EnsembleBuffer:
         Get ensembled action from buffer.
         """
         if self.timestep - self.actions_start_timestep >= len(self.actions):
+            self.timestep += 1
             return None      # no data
         while self.actions_start_timestep < self.timestep:
             self.actions.popleft()
@@ -59,6 +60,7 @@ class EnsembleBuffer:
         actions = self.actions[0]
         actions_timestep = self.actions_timestep[0]
         if actions == []:
+            self.timestep += 1
             return None      # no data
         sorted_actions = sorted(zip(actions_timestep, actions))
         all_actions = [x for _, x in sorted_actions]
