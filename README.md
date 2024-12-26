@@ -6,6 +6,11 @@
 
 ![teaser](assets/images/teaser.jpg)
 
+## 🔥 News
+
+- **[Dec 26, 2024]** Fix several potential installation issues. Add support for CUDA 12.1.
+- **[May 11, 2024]** Initial release.
+
 ## 🛫 Getting Started
 
 ### 💻 Installation

@@ -2,7 +2,7 @@
 
 ## 💻 Environments
 
-Please follow the instructions to install the conda environments and the dependencies of the codebase. We recommend using CUDA 11.x during installations to avoid compatibility issues (remember to replace `11.x` in the following commands with your own CUDA version like `11.4`).
+Please follow the instructions to install the conda environments and the dependencies of the codebase. We recommend using CUDA 11.4 or 11.7 during installations to avoid compatibility issues. For CUDA 12.1, we provide [the modified MinkowskiEngine for CUDA 12.1](https://github.com/chenxi-wang/MinkowskiEngine/tree/cuda-12-1).
 
 1. Create a new conda environment and activate the environment.
     ```bash
@@ -10,21 +10,24 @@ Please follow the instructions to install the conda environments and the depende
     conda activate rise
     ```
 
-2. Install necessary dependencies.
+2. Manually install cudatoolkit, then install necessary dependencies.
     ```bash
-    conda install cudatoolkit=11.x
     pip install -r requirements.txt
     ```
 
-3. Install [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine) manually following [the official instsallation instructions](https://github.com/NVIDIA/MinkowskiEngine?tab=readme-ov-file#cuda-11x).
+3. Install MinkowskiEngine. We have modified MinkowskiEngine for better adpatation.
     ```bash
     mkdir dependencies && cd dependencies
     conda install openblas-devel -c anaconda
-    export CUDA_HOME=/usr/local/cuda-11.x
-    git clone git@github.com:NVIDIA/MinkowskiEngine.git
+    export CUDA_HOME=/path/to/cuda
+    git clone git@github.com:chenxi-wang/MinkowskiEngine.git
     cd MinkowskiEngine
-    python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
+    python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas_library_dirs=${CONDA_PREFIX}/lib --blas=openblas
     cd ../..
+    ```
+    For CUDA 12.1, switch to the `cuda-12-1` branch after cloning the modified repository.
+    ```bash
+    git checkout cuda-12-1
     ```
 
 4. Install [Pytorch3D](https://github.com/facebookresearch/pytorch3d) manually.
@@ -35,6 +38,7 @@ Please follow the instructions to install the conda environments and the depende
     pip install -e .
     cd ../..
     ```
+
 
 ## 🦾 Real Robot
 
