@@ -144,11 +144,13 @@ The RISE policy consists of (1) a sparse 3D encoder ([`policy/tokenizer.py`](pol
 ## ✍️ Citation
 
 ```bibtex
-@article{wang2024rise,
-    title   = {RISE: 3D Perception Makes Real-World Robot Imitation Simple and Effective},
-    author  = {Chenxi Wang and Hongjie Fang and Hao-Shu Fang and Cewu Lu},
-    journal = {arXiv preprint arXiv:2404.12281},
-    year    = {2024}
+@inproceedings{wang2024rise,
+    title     = {RISE: 3D Perception Makes Real-World Robot Imitation Simple and Effective},
+    author    = {Wang, Chenxi and Fang, Hongjie and Fang, Hao-Shu and Lu, Cewu},
+    booktitle = {2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)}, 
+    year      = {2024},
+    pages     = {2870-2877},
+    doi       = {10.1109/IROS58592.2024.10801678}}
 }
 ```
 
