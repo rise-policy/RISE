@@ -246,10 +246,11 @@ class RealWorldDataset(Dataset):
             # green box stands for the translation normalization range
             bbox3d_2 = o3d.geometry.AxisAlignedBoundingBox(TRANS_MIN, TRANS_MAX)
             bbox3d_2.color = [0, 1, 0]
-            for i in range(len(action_tcps)):
-                action = action_tcps[i]
-                sphere = o3d.geometry.TriangleMesh.create_sphere(0.005).translate(action[:3])
-                traj.append(sphere)
+            action_tcps_vis = xyz_rot_transform(action_tcps, from_rep = "quaternion", to_rep = "matrix")
+            for i in range(len(action_tcps_vis)):
+                action = action_tcps_vis[i]
+                frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.03).transform(action)
+                traj.append(frame)
             o3d.visualization.draw_geometries([pcd.voxel_down_sample(self.voxel_size), bbox3d_1, bbox3d_2, *traj])
         
         # rotation transformation (to 6d)
