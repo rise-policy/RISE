@@ -36,7 +36,8 @@ class RealWorldDataset(Dataset):
         aug_jitter = False,
         aug_jitter_params = [0.4, 0.4, 0.2, 0.1],
         aug_jitter_prob = 0.2,
-        with_cloud = False
+        with_cloud = False,
+        vis = False
     ):
         assert split in ['train', 'val', 'all']
 
@@ -56,6 +57,7 @@ class RealWorldDataset(Dataset):
         self.aug_jitter_params = np.array(aug_jitter_params)
         self.aug_jitter_prob = aug_jitter_prob
         self.with_cloud = with_cloud
+        self.vis = vis
         
         self.all_demos = sorted(os.listdir(self.data_path))
         self.num_demos = len(self.all_demos)
@@ -115,7 +117,7 @@ class RealWorldDataset(Dataset):
         rotation_angles = np.random.rand(3) * (self.aug_rot_max - self.aug_rot_min) + self.aug_rot_min
         rotation_angles = rotation_angles / 180 * np.pi  # tranform from degree to radius
         aug_mat = rot_trans_mat(translation_offsets, rotation_angles)
-        center = clouds[-1].mean(axis = 0)
+        center = clouds[-1][..., :3].mean(axis = 0)
 
         for i in range(len(clouds)):
             clouds[i][..., :3] -= center
@@ -229,6 +231,26 @@ class RealWorldDataset(Dataset):
         # point augmentations
         if self.split == 'train' and self.aug:
             clouds, action_tcps = self._augmentation(clouds, action_tcps)
+
+        # visualization
+        if self.vis:
+            points = clouds[-1][..., :3]
+            print("point range", points.min(axis=0), points.max(axis=0))
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(points)
+            pcd.colors = o3d.utility.Vector3dVector(colors * IMG_STD + IMG_MEAN)
+            traj = []
+            # red box stands for the workspace range
+            bbox3d_1 = o3d.geometry.AxisAlignedBoundingBox(WORKSPACE_MIN, WORKSPACE_MAX)
+            bbox3d_1.color = [1, 0, 0]
+            # green box stands for the translation normalization range
+            bbox3d_2 = o3d.geometry.AxisAlignedBoundingBox(TRANS_MIN, TRANS_MAX)
+            bbox3d_2.color = [0, 1, 0]
+            for i in range(len(action_tcps)):
+                action = action_tcps[i]
+                sphere = o3d.geometry.TriangleMesh.create_sphere(0.005).translate(action[:3])
+                traj.append(sphere)
+            o3d.visualization.draw_geometries([pcd.voxel_down_sample(self.voxel_size), bbox3d_1, bbox3d_2, *traj])
         
         # rotation transformation (to 6d)
         action_tcps = xyz_rot_transform(action_tcps, from_rep = "quaternion", to_rep = "rotation_6d")

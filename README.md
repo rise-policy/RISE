@@ -16,7 +16,9 @@
 
 ### 💻 Installation
 
-Please follow the [installation guide](assets/docs/INSTALL.md) to install the `rise` conda environments and the dependencies, as well as the real robot environments. Also, remember to adjust the constant parameters in `dataset/constants.py` and `utils/constants.py` according to your own environment. **Make sure that `TRANS_MIN/MAX` and `WORKSPACE_MIN/MAX` are correctly set in the camera coordinates, or you may obtain meaningless output. We recommend expanding `TRANS_MIN/MAX` by 0.15 - 0.3 meters on both sides of the actual translation range to accommodate spatial data augmentation.**
+Please follow the [installation guide](assets/docs/INSTALL.md) to install the `rise` conda environments and the dependencies, as well as the real robot environments. Also, remember to adjust the constant parameters in `dataset/constants.py` and `utils/constants.py` according to your own environment.
+
+**Make sure that `TRANS_MIN/MAX` and `WORKSPACE_MIN/MAX` are correctly set in the camera coordinates, or you may obtain meaningless output.** We recommend expanding `TRANS_MIN/MAX` by 0.15 - 0.3 meters on both sides of the actual translation range to accommodate spatial data augmentation. You could follow [command_train.sh](command_train.sh) for data visualization and parameter check.
 
 ### 📷 Calibration
 

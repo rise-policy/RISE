@@ -39,7 +39,8 @@ default_args = edict({
     "num_epochs": 1000,
     "save_epochs": 50,
     "num_workers": 24,
-    "seed": 233
+    "seed": 233,
+    "vis_data": False
 })
 
 
@@ -72,7 +73,8 @@ def train(args_override):
         voxel_size = args.voxel_size,
         aug = args.aug,
         aug_jitter = args.aug_jitter, 
-        with_cloud = False
+        with_cloud = False,
+        vis = args.vis_data
     )
     sampler = torch.utils.data.distributed.DistributedSampler(
         dataset, 
@@ -85,7 +87,8 @@ def train(args_override):
         batch_size = args.batch_size // WORLD_SIZE,
         num_workers = args.num_workers,
         collate_fn = collate_fn,
-        sampler = sampler
+        sampler = sampler,
+        drop_last = True
     )
 
     # policy
@@ -203,5 +206,6 @@ if __name__ == '__main__':
     parser.add_argument('--save_epochs', action = 'store', type = int, help = 'saving epochs', required = False, default = 50)
     parser.add_argument('--num_workers', action = 'store', type = int, help = 'number of workers', required = False, default = 24)
     parser.add_argument('--seed', action = 'store', type = int, help = 'seed', required = False, default = 233)
+    parser.add_argument('--vis_data', action = 'store_true', help = 'whether to visualize the input data and ground truth actions.')
 
     train(vars(parser.parse_args()))

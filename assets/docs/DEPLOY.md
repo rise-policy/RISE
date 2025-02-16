@@ -4,7 +4,7 @@
    - `IMG_MEAN` and `IMG_STD` are the image normalization constants. Here we use ImageNet normalization coefficients.
    - `TRANS_MIN` and `TRANS_MAX` are the tcp normalization range in the camera coordinate.
    - `MAX_GRIPPER_WIDTH` indicates the gripper width normalization range (in meter).
-   - `WORKSPACE_MIN` and `WORKSPACE_MAX` are the workspace range in the camera coordinate. 
+   - `WORKSPACE_MIN` and `WORKSPACE_MAX` are the workspace range in the camera coordinate and used for point cloud cropping. 
    - `SAFE_WORKSPACE_MIN` and `SAFE_WORKSPACE_MAX` are the safe workspace range in the base coordinate (used for evaluation).
    - `SAFE_EPS` denotes the safe epsilon of the safe workspace range. Therefore, the real range should be [min + eps, max - eps].
    - `GRIPPER_THRESHOLD` denotes the gripper moving threshold (in meter) to avoid gripper action too frequently during evaluation.
