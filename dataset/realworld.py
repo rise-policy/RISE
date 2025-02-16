@@ -115,9 +115,17 @@ class RealWorldDataset(Dataset):
         rotation_angles = np.random.rand(3) * (self.aug_rot_max - self.aug_rot_min) + self.aug_rot_min
         rotation_angles = rotation_angles / 180 * np.pi  # tranform from degree to radius
         aug_mat = rot_trans_mat(translation_offsets, rotation_angles)
-        for cloud in clouds:
-            cloud = apply_mat_to_pcd(cloud, aug_mat)
+        center = clouds[-1].mean(axis = 0)
+
+        for i in range(len(clouds)):
+            clouds[i][..., :3] -= center
+            clouds[i] = apply_mat_to_pcd(clouds[i], aug_mat)
+            clouds[i][..., :3] += center
+
+        tcps[..., :3] -= center
         tcps = apply_mat_to_pose(tcps, aug_mat, rotation_rep = "quaternion")
+        tcps[..., :3] += center
+
         return clouds, tcps
 
     def _normalize_tcp(self, tcp_list):
