@@ -27,7 +27,7 @@ Please follow the instructions to install the conda environments and the depende
     ```
     For CUDA 12.1, switch to the `cuda-12-1` branch after cloning the modified repository.
     ```bash
-    git checkout cuda-12-1
+    git checkout -b cuda-12-1 origin/cuda-12-1
     ```
 
 4. Install [Pytorch3D](https://github.com/facebookresearch/pytorch3d) manually.
