@@ -8,6 +8,7 @@
 
 ## 🔥 News
 
+- **[May 15, 2025]** [RISE-2](https://github.com/rise-policy/rise-2) is released! RISE-2 combines 3D perception for spatial understanding and 2D visual foundation models for rich semantic knowledge, achieving improved in-domain performance and decent generalization results. Check it out!
 - **[Feb 16, 2025]** Optimize spatial data augmentation. Add data visualization for config check. Add tips for setting workspace range and normalization range.
 - **[Dec 26, 2024]** Fix several potential installation issues. Add support for CUDA 12.1.
 - **[May 11, 2024]** Initial release.
