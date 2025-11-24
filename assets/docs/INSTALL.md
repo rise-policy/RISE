@@ -2,7 +2,7 @@
 
 ## 💻 Environments
 
-Please follow the instructions to install the conda environments and the dependencies of the codebase. We recommend using CUDA 11.4 or 11.7 during installations to avoid compatibility issues. For CUDA 12.1, we provide [the modified MinkowskiEngine for CUDA 12.1](https://github.com/chenxi-wang/MinkowskiEngine/tree/cuda-12-1).
+Please follow the instructions to install the conda environments and the dependencies of the codebase. We recommend using CUDA 11.x or 12.x during installations to avoid compatibility issues. We provide [the modified MinkowskiEngine for CUDA 12.x](https://github.com/chenxi-wang/MinkowskiEngine/tree/cuda-12-1).
 
 1. Create a new conda environment and activate the environment.
     ```bash
@@ -22,12 +22,15 @@ Please follow the instructions to install the conda environments and the depende
     export CUDA_HOME=/path/to/cuda
     git clone git@github.com:chenxi-wang/MinkowskiEngine.git
     cd MinkowskiEngine
+
+    # Uncomment the following line if you are using CUDA 12.x.
+    # git checkout -b cuda-12-1 origin/cuda-12-1
+
+    # Uncomment the following line if you are using CUDA 12.8.
+    # sed -i 's/\bauto __raw = __to_address(__r.get());/auto __raw = std::__to_address(__r.get());/' /usr/include/c++/11/bits/shared_ptr_base.h
+
     python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas_library_dirs=${CONDA_PREFIX}/lib --blas=openblas
     cd ../..
-    ```
-    For CUDA 12.1, switch to the `cuda-12-1` branch after cloning the modified repository.
-    ```bash
-    git checkout -b cuda-12-1 origin/cuda-12-1
     ```
 
 4. Install [Pytorch3D](https://github.com/facebookresearch/pytorch3d) manually.
