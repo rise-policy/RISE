@@ -8,6 +8,7 @@
 
 ## 🔥 News
 
+- **[Nov 24, 2025]** Support CUDA 12.8 for MinkowskiEngine installation. You'll need to clone or update the modified [MinkowskiEngine](https://github.com/chenxi-wang/MinkowskiEngine/tree/cuda-12-1) library. See the [installation guide](assets/docs/INSTALL.md) for details.
 - **[May 15, 2025]** [RISE-2](https://github.com/rise-policy/rise-2) is released! RISE-2 combines 3D perception for spatial understanding and 2D visual foundation models for rich semantic knowledge, achieving improved in-domain performance and decent generalization results. Check it out!
 - **[Feb 16, 2025]** Optimize spatial data augmentation. Add data visualization for config check. Add tips for setting workspace range and normalization range.
 - **[Dec 26, 2024]** Fix several potential installation issues. Add support for CUDA 12.1.
