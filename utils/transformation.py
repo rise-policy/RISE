@@ -195,7 +195,7 @@ def rot_mat_y_axis(angle):
     3x3 transformation matrix for rotation along y axis.
     """
     c, s = np.cos(angle), np.sin(angle)
-    return np.array([[c, 0, -s], [0, 1, 0], [s, 0, c]], dtype = np.float32)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]], dtype = np.float32)
 
 def rot_mat_z_axis(angle):
     """
